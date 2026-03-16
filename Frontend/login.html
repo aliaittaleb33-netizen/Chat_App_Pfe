@@ -1,0 +1,142 @@
+
+
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title> Login </title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+		<style>
+			/* Style de base */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Dégradé élégant */
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Boîte centrale de connexion */
+.border {
+    background: rgba(255, 255, 255, 0.85); /* Fond blanc semi-transparent */
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 50px;
+    width: 380px;
+    text-align: center;
+    backdrop-filter: blur(15px); /* Effet flou en arrière-plan */
+}
+
+/* Titre de la page */
+.header h1 {
+    font-size: 40px;
+    color: #6a11cb;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Formulaire */
+.textbox {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 30px;
+    border: 2px solid #6a11cb;
+    background: #fff;
+    color: #333;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+}
+
+.textbox:focus {
+    border-color: #2575fc;
+    outline: none;
+    background-color: #f4f4f4;
+}
+
+/* Bouton de connexion */
+.btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 30px;
+    background-color: #2575fc;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    letter-spacing: 1px;
+}
+
+.btn:hover {
+    background-color: #6a11cb;
+}
+
+/* Message d'erreur */
+.msg {
+    color: #ff4d4d;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* Lien d'inscription */
+.bottom {
+    font-size: 14px;
+    color: #fff;
+    margin-top: 20px;
+}
+
+.bottom a {
+    color: #2575fc;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.bottom a:hover {
+    text-decoration: underline;
+}
+
+/* Animation du formulaire */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.border {
+    animation: slideIn 1s ease-out;
+}
+
+		</style>
+	</head>
+	<body></br></br></br></br></br>
+		<div align="center">
+		<div align="center" class="border">
+			<div class="header">
+				<h1 class="word">Login</h1>
+			</div></br></br></br>
+			<h2 class="word">
+				<form action="{{ url_for('login') }}" method="post">
+				<div class="msg">{{ msg }}</div>
+					<input id="username" name="username" type="text" placeholder="Enter Your Username" class="textbox"/></br></br>
+					<input id="password" name="password" type="password" placeholder="Enter Your Password" class="textbox"/></br></br></br>
+					<input type="submit" class="btn" value="Sign In"></br></br>
+				</form>
+			</h2>
+			<p class="bottom">Don't have an account? <a class="bottom" href="{{url_for('register')}}"> Sign Up here</a></p>
+		</div>
+		</div>
+	</body>
+</html>

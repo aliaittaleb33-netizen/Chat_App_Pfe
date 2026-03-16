@@ -1,0 +1,177 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 300px;
+    background-color: #ffffff;
+    padding: 20px;
+    border-right: 1px solid #ccc;
+}
+
+.user {
+    cursor: pointer;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.user:hover {
+    background-color: #e9e9e9;
+}
+
+.status {
+    font-size: 12px;
+}
+
+.status.online {
+    color: green;
+}
+
+.chat-area {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #ffffff;
+}
+
+#chat-box {
+    height: calc(100% - 100px);
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #fafafa;
+}
+
+#message {
+    width: 75%;
+    padding: 10px;
+}
+
+button {
+    padding: 10px;
+}
+
+/* Style pour la liste des groupes */
+.list-modern {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.group-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background-color: #f8f9fa;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.group-item:hover {
+    background-color: #e9ecef;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.group-name {
+    font-weight: bold;
+    color: #343a40;
+}
+
+/* Style pour le champ de création de groupes */
+.group-creation-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.input-modern {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-modern:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    outline: none;
+}
+
+.btn-modern {
+    padding: 10px 15px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-modern:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Style pour la sélection des membres */
+.member-selection-container {
+    margin-top: 20px;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background-color: #ffffff;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.member-item:hover {
+    background-color: #f1f3f5;
+}
+
+.checkbox-modern {
+    accent-color: #007bff;
+}
+
+.member-label {
+    font-size: 14px;
+    color: #495057;
+}
+#logout-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#logout-button:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+

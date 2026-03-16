@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Privé</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        /* Styles pour le layout principal */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            margin: 0;
+            height: 100vh;
+            background-color: #eef2f3;
+        }
+        /* Styles pour la barre latérale des utilisateurs */
+        .sidebar {
+            width: 25%;
+            background-color: #ffffff;
+            padding: 15px;
+            border-right: 1px solid #ccc;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            overflow-y: auto;
+        }
+        .user, .group {
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .user:hover, .group:hover {
+            background-color: #e9ecef;
+            transform: scale(1.02);
+        }
+        .user.selected, .group.selected {
+            background-color: #d1e7dd;
+            font-weight: bold;
+        }
+        .status {
+            font-size: 0.9em;
+        }
+        /* Styles pour la zone des messages */
+        .messages-container {
+            width: 75%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            border-left: 1px solid #ccc;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            overflow: hidden;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fafafa;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .message {
+           margin: 15px 0; /* Ajoute un espace de 10px au-dessus et en dessous du message */
+           padding: 5px 10px;
+           border-radius: 5px;
+           position: relative;
+        }
+        .my-message {
+            text-align: right;
+            background-color: #cce5ff;
+            color: blue;
+            margin-left: 40%;
+        }
+        .their-message {
+            text-align: left;
+            background-color: #d4edda;
+            color: green;
+            margin-right: 40%;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
+            position: absolute;
+            bottom: -15px;
+            right: 10px;
+        }
+        /* Styles pour le champ d’entrée */
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: border-color 0.3s;
+        }
+        .input-container input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .input-container button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .input-container button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        .timestamp {
+            font-size: 0.75em; /* Réduction de la taille de la police pour distinguer des messages */
+            color: #555; /* Couleur légèrement foncée pour le contraste */
+            display: block; /* Place l'horodatage sur une nouvelle ligne */
+            margin-top: 5px; /* Ajoute un espace entre le message et l'horodatage */
+            text-align: right; /* Aligne à droite pour un look net */
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>ÉTUDIANTS</h2>
+    <ul id="user-list">
+        {% for student in students %}
+            {% if student.id != user_id %}
+                <li class="user" data-id="{{ student.id }}">
+                    <span class="status {{ 'online' if student.en_ligne else 'offline' }}">
+                        {{ '🟢' if student.en_ligne else '🔴' }} {{ student.username }}
+                    </span>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    
+    <h2>GROUPES</h2>
+    <ul id="group-list">
+        {% for group in groups %}
+            <li class="group" data-id="{{ group.id }}">{{ group.nom }}</li>
+        {% endfor %}
+    </ul>
+    
+    <div>
+        <input type="text" id="group-name-input" placeholder="Nom du groupe">
+        <button id="create-group">Créer un groupe</button>
+    </div>
+    
+    <div>
+        <h2>Choisir les membres du groupe</h2>
+        <ul id="student-selection-list">
+            {% for student in students %}
+                {% if student.id != user_id %}
+                    <li class="user">
+                        <input type="checkbox" id="student-{{ student.id }}" value="{{ student.id }}">
+                        <label for="student-{{ student.id }}">{{ student.username }}</label>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+<div class="messages-container">
+    <h2>Chat </h2>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="input-container">
+        <input type="text" id="message-input" placeholder="Écrivez votre message..." autocomplete="off">
+        <button id="send-message">Envoyer</button>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    const socket = io.connect('http://127.0.0.1:5000');
+    let currentReceiverId = null;
+    let currentGroupId = null;
+    const currentUserId = "{{ user_id }}"; // ID de l'utilisateur actuel
+    
+
+    async function loadUsers() {
+        const response = await fetch('/get_students');
+        const students = await response.json();
+        const userList = document.getElementById('user-list');
+        userList.innerHTML = '';
+
+        students.forEach(student => {
+            if (student.id !== currentUserId) {
+                const userElement = document.createElement('li');
+                userElement.classList.add('user');
+                userElement.setAttribute('data-id', student.id);
+                userElement.innerHTML = `
+                    <span class="status ${student.en_ligne ? 'online' : 'offline'}">
+                        ${student.en_ligne ? '🟢 En ligne' : '🔴 Hors ligne'}
+                    </span>
+                    ${student.username}
+                `;
+                userList.appendChild(userElement);
+            }
+        });
+    }
+
+    async function loadGroups() {
+        const response = await fetch('/get_groups');
+        const groups = await response.json();
+        const groupList = document.getElementById('group-list');
+        groupList.innerHTML = '';
+
+        groups.forEach(group => {
+            const groupElement = document.createElement('li');
+            groupElement.classList.add('group');
+            groupElement.setAttribute('data-id', group.id);
+            groupElement.innerText = group.nom;
+            groupList.appendChild(groupElement);
+        });
+    }
+
+    window.onload = async function() {
+        await loadUsers();
+        await loadGroups();
+    };
+
+    function joinRoom() {
+        if (currentReceiverId) {
+            const room = `private_${currentUserId}_${currentReceiverId}`;
+            socket.emit('join', { user_id: currentUserId, receiver_id: currentReceiverId });
+        } else if (currentGroupId) {
+            const room = `group_${currentGroupId}`;
+            socket.emit('join', { user_id: currentUserId, group_id: currentGroupId });
+        }
+    }
+    
+socket.on('user_status_change', function(data) {
+    const userElement = document.querySelector(`.user[data-id="${data.id}"]`);
+    if (userElement) {
+        const statusSpan = userElement.querySelector('.status');
+        if (data.en_ligne) {
+            statusSpan.textContent = '🟢 En ligne';
+            statusSpan.classList.add('online');
+            statusSpan.classList.remove('offline');
+        } else {
+            statusSpan.textContent = '🔴 Hors ligne';
+            statusSpan.classList.add('offline');
+            statusSpan.classList.remove('online');
+        }
+    }
+});
+
+    document.getElementById('user-list').addEventListener('click', async function(event) {
+        const target = event.target.closest('.user');
+      if (target) {
+           currentReceiverId = target.getAttribute('data-id');
+           currentGroupId = null; // Réinitialiser l'ID du groupe
+           document.querySelectorAll('.user').forEach(user => user.classList.remove('selected'));
+           target.classList.add('selected');
+           joinRoom();
+
+        // Requête pour récupérer les messages entre l'utilisateur actuel et l'utilisateur sélectionné
+           const response = await fetch(`/get_messages/${currentReceiverId}`);
+           const messages = await response.json();
+
+           const chatBox = document.getElementById('chat-box');
+           chatBox.innerHTML = `<p>Messages avec ${target.textContent}:</p>`;  // Mettre à jour avec le nom de l'utilisateur
+
+        // Affichage des messages dans le chat
+           messages.forEach(msg => {
+               addMessageToChatBox(`[${msg.sender_name}] ${msg.message}`, msg.sender_id === currentUserId, msg.timestamp);
+            });
+        }
+    });
+
+    document.getElementById('group-list').addEventListener('click', async function(event) {
+        const target = event.target.closest('.group');
+        if (target) {
+            currentGroupId = target.getAttribute('data-id');
+            currentReceiverId = null;
+            document.querySelectorAll('.group').forEach(group => group.classList.remove('selected'));
+            target.classList.add('selected');
+
+            const response = await fetch(`/get_group_messages/${currentGroupId}`);
+            const messages = await response.json();
+
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = `<p>Messages dans le groupe ${target.textContent}:</p>`;
+            messages.forEach(msg => {
+                addMessageToChatBox(`[${msg.sender_name}] ${msg.message}`, msg.sender_id === currentUserId, msg.timestamp);
+            });
+        }
+    });
+
+    document.getElementById('send-message').addEventListener('click', function() {
+        const messageInput = document.getElementById('message-input');
+    const message = messageInput.value.trim();
+    if (message) {
+        // Si c'est un message privé
+        if (currentReceiverId) {
+            socket.emit('send_message', { message, sender_id: currentUserId, receiver_id: currentReceiverId });
+
+            // Ajouter immédiatement le message envoyé dans la boîte de chat
+            addMessageToChatBox(`[Vous] ${message}`, true, new Date().toLocaleString());
+        } 
+        // Si c'est un message de groupe
+        else if (currentGroupId) {
+            socket.emit('send_group_message', { message, sender_id: currentUserId, group_id: currentGroupId });
+
+            // Ajouter immédiatement le message envoyé dans la boîte de chat
+            addMessageToChatBox(`[Vous] ${message}`, true, new Date().toLocaleString());
+        }
+
+        // Vider le champ de message après envoi
+        messageInput.value = '';
+        }
+    });
+
+    document.getElementById('create-group').addEventListener('click', async function() {
+    const groupNameInput = document.getElementById('group-name-input');
+    const groupName = groupNameInput.value.trim();
+
+    if (!groupName) {
+        alert("Le nom du groupe est obligatoire !");
+        return;
+    }
+
+    // Récupérer les membres sélectionnés
+    const selectedMembers = [];
+    const checkboxes = document.querySelectorAll('#student-selection-list input[type="checkbox"]:checked');
+    checkboxes.forEach(checkbox => {
+        selectedMembers.push(checkbox.value);
+    });
+
+    if (selectedMembers.length === 0) {
+        alert("Vous devez sélectionner au moins un membre pour le groupe !");
+        return;
+    }
+
+    // Envoi de la demande pour créer le groupe avec les membres
+    const response = await fetch('/create_group', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            nom: groupName,
+            membres: selectedMembers  // Liste des membres sélectionnés
+        }),
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+        alert(result.message);
+    } else {
+        alert(result.message || "Erreur lors de la création du groupe.");
+    }
+});
+
+
+
+
+
+    socket.on('new_message', function(data) {
+        
+        if (currentReceiverId == data.sender_id || (currentGroupId && data.group_id == currentGroupId)) {
+            addMessageToChatBox(data.message, data.sender_id === currentUserId, data.timestamp);
+        }
+    });
+
+    function addMessageToChatBox(message, isMyMessage, timestamp) {
+        const chatBox = document.getElementById('chat-box');
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', isMyMessage ? 'my-message' : 'their-message');
+        messageElement.innerHTML = `
+            <div>${message}</div>
+            <span class="timestamp">${timestamp}</span>
+        `;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight; // Défilement automatique vers le bas
+    }
+
+</script>
+</body>
+</html>

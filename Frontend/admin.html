@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Style de fond de la page */
+        body.orange-and-black {
+            background: linear-gradient(135deg, #0073e6, #004080);
+            font-family: Arial, sans-serif;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* Style du titre */
+        h1.word, h2.word {
+            color: #ffffff;
+            text-shadow: 1px 1px #222;
+            margin: 10px 0;
+        }
+        h1.word {
+            font-size: 2.5em;
+        }
+        h2.word {
+            font-size: 1.8em;
+        }
+
+        /* Style de la table */
+        table.border {
+            width: 80%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin: 20px 0;
+        }
+
+        th.word, td.word {
+            padding: 10px 15px;
+            text-align: left;
+            font-size: 1em;
+        }
+
+        th.word {
+            background-color: #004080;
+            color: #ffffff;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        td.word {
+            border-bottom: 1px solid #cccccc;
+        }
+
+        /* Style des boutons */
+        .btn {
+            background-color: #0073e6;
+            border: none;
+            color: #ffffff;
+            padding: 8px 15px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 5px; /* Espacement entre les boutons */
+        }
+
+        .btn:hover {
+            background-color: #004080;
+        }
+
+        /* Style du lien de déconnexion */
+        a.word {
+            font-size: 1em;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 10px 15px;
+            border: 2px solid #ffffff;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        a.word:hover {
+            background-color: #ffffff;
+            color: #004080;
+        }
+
+        /* Style des messages d'erreur */
+        .message {
+            color: #ff0000; /* Couleur rouge pour les messages d'erreur */
+            margin-bottom: 20px;
+        }
+
+        /* Style lorsqu'aucune donnée n'est disponible */
+        .no-data {
+            text-align: center;
+            font-weight: bold;
+            color: #ff0000;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body class="orange-and-black">
+    <h1 class="word">Bienvenue, {{ username }}!</h1>
+
+    {% if message %}
+        <div class="message">{{ message }}</div>
+    {% endif %}
+
+    <h2 class="word">Étudiants en Attente d'Approbation</h2>
+    <table class="border">
+        <tr>
+            <th class="word">Nom d'Utilisateur</th>
+            <th class="word">Email</th>
+            <th class="word">Action</th>
+        </tr>
+        {% for student in students_waiting_approval %}
+        <tr>
+            <td class="word">{{ student.username }}</td>
+            <td class="word">{{ student.email }}</td>
+            <td>
+                <form action="{{ url_for('approve_student', student_id=student.id) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn">Approuver</button>
+                </form>
+                <form action="{{ url_for('reject_student', student_id=student.id) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn">Rejeter</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2 class="word">Tous les Étudiants</h2>
+    <table class="border">
+        <tr>
+            <th class="word">Nom d'Utilisateur</th>
+            <th class="word">Nom</th>
+            <th class="word">Prénom</th>
+            <th class="word">Statut</th>
+            <th class="word">Action</th>
+        </tr>
+        {% if students_all %}
+            {% for student in students_all %}
+            <tr>
+                <td class="word">{{ student.username }}</td>
+                <td class="word">{{ student.nom }}</td>
+                <td class="word">{{ student.prenom }}</td>
+                <td class="word">{{ 'Approuvé' if student.approuve == 1 else 'Non approuvé' }}</td>
+                <td>
+                    <form action="{{ url_for('ban_student', student_id=student.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn">Bannir</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="5" class="no-data">Aucun étudiant trouvé.</td>
+            </tr>
+        {% endif %}
+    </table>
+
+    <h2 class="word">Historique de Connexion</h2>
+    <table class="border">
+        <tr>
+            <th class="word">Nom d'Utilisateur</th>
+            <th class="word">Pseudo</th>
+            <th class="word">Adresse IP</th>
+            <th class="word">Action</th>
+            <th class="word">Date</th>
+        </tr>
+        {% for entry in login_history %}
+        <tr>
+            <td class="word">{{ entry.username }}</td>
+            <td class="word">{{ entry.pseudo }}</td>
+            <td class="word">{{ entry.adresse_ip }}</td>
+            <td class="word">{{ entry.action }}</td>
+            <td class="word">{{ entry.date_connexion.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a class="word" href="{{ url_for('logout') }}">Déconnexion</a>
+</body>
+</html>
